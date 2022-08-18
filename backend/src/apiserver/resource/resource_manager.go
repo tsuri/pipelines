@@ -701,11 +701,13 @@ func (r *ResourceManager) CreateJob(ctx context.Context, apiJob *api.Job) (*mode
 		return nil, err
 	}
 
+	// Create pipelineSpec object from the manifest
 	tmpl, err := template.New(manifestBytes)
 	if err != nil {
 		return nil, err
 	}
 
+	// Create the argo scheduledWorkflow object for this job
 	scheduledWorkflow, err := tmpl.ScheduledWorkflow(apiJob)
 	if err != nil {
 		return nil, util.Wrap(err, "failed to generate the scheduledWorkflow.")
@@ -724,11 +726,13 @@ func (r *ResourceManager) CreateJob(ctx context.Context, apiJob *api.Job) (*mode
 		return nil, err
 	}
 
+	// Create argo workflow CR resource
 	newScheduledWorkflow, err := r.getScheduledWorkflowClient(namespace).Create(ctx, scheduledWorkflow)
 	if err != nil {
 		return nil, util.NewInternalServerError(err, "Failed to create a scheduled workflow for (%s)", scheduledWorkflow.Name)
 	}
 
+	// Store the metadata in database
 	job, err := r.ToModelJob(apiJob, util.NewScheduledWorkflow(newScheduledWorkflow), string(manifestBytes), tmpl.GetTemplateType())
 	if err != nil {
 		return nil, util.Wrap(err, "Create job failed")
