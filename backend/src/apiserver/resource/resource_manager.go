@@ -351,6 +351,7 @@ func (r *ResourceManager) CreateRun(ctx context.Context, apiRun *api.Run) (*mode
 	runId := uuid.String()
 	runAt := r.time.Now().Unix()
 
+	// Create pipelineSpec object from pipelineManifest
 	tmpl, err := template.New(manifestBytes)
 	if err != nil {
 		return nil, err
@@ -359,6 +360,8 @@ func (r *ResourceManager) CreateRun(ctx context.Context, apiRun *api.Run) (*mode
 		RunId: runId,
 		RunAt: runAt,
 	}
+
+	// Create Argo workflow template
 	executionSpec, err := tmpl.RunWorkflow(apiRun, runWorkflowOptions)
 	if err != nil {
 		return nil, util.NewInternalServerError(err, "failed to generate the ExecutionSpec.")
