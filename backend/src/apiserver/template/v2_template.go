@@ -93,6 +93,7 @@ func (t *V2Spec) ParametersJSON() (string, error) {
 	return "[]", nil
 }
 
+// Create argo workflow for a run based on pipelineSpec.
 func (t *V2Spec) RunWorkflow(apiRun *api.Run, options RunWorkflowOptions) (util.ExecutionSpec, error) {
 	bytes, err := protojson.Marshal(t.spec)
 	if err != nil {
@@ -132,6 +133,7 @@ func (t *V2Spec) RunWorkflow(apiRun *api.Run, options RunWorkflowOptions) (util.
 	return executionSpec, nil
 }
 
+// Create argo shceduled workflow based on ppipelineSpec for a job (recurring run).
 func (t *V2Spec) ScheduledWorkflow(apiJob *api.Job) (*scheduledworkflow.ScheduledWorkflow, error) {
 	bytes, err := protojson.Marshal(t.spec)
 	if err != nil {
