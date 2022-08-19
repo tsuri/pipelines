@@ -20,6 +20,7 @@ type V2Spec struct {
 	spec *pipelinespec.PipelineSpec
 }
 
+// Convert pipelineSpec to argo scheduled workflow, for a job (recurring run)
 func (t *V2Spec) ScheduledWorkflow(apiJob *api.Job) (*scheduledworkflow.ScheduledWorkflow, error) {
 	bytes, err := protojson.Marshal(t.spec)
 	if err != nil {
@@ -143,6 +144,7 @@ func (t *V2Spec) ParametersJSON() (string, error) {
 	return "[]", nil
 }
 
+// Convert pipelineSpec to argo workflow, for a run
 func (t *V2Spec) RunWorkflow(apiRun *api.Run, options RunWorkflowOptions) (util.ExecutionSpec, error) {
 	bytes, err := protojson.Marshal(t.spec)
 	if err != nil {
