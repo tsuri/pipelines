@@ -20,56 +20,6 @@ type V2Spec struct {
 	spec *pipelinespec.PipelineSpec
 }
 
-func (t *V2Spec) ScheduledWorkflow(apiJob *api.Job) (*scheduledworkflow.ScheduledWorkflow, error) {
-	bytes, err := protojson.Marshal(t.spec)
-	if err != nil {
-		return nil, util.Wrap(err, "Failed marshal pipeline spec to json")
-	}
-	spec := &structpb.Struct{}
-	if err := protojson.Unmarshal(bytes, spec); err != nil {
-		return nil, util.Wrap(err, "Failed to parse pipeline spec")
-	}
-	job := &pipelinespec.PipelineJob{PipelineSpec: spec}
-	jobRuntimeConfig, err := toPipelineJobRuntimeConfig(apiJob.GetPipelineSpec().GetRuntimeConfig())
-	if err != nil {
-		return nil, util.Wrap(err, "Failed to convert to PipelineJob RuntimeConfig")
-	}
-	job.RuntimeConfig = jobRuntimeConfig
-	obj, err := argocompiler.Compile(job, nil)
-	if err != nil {
-		return nil, util.Wrap(err, "Failed to compile job")
-	}
-	// currently, there is only Argo implementation, so it's using `ArgoWorkflow` for now
-	// later on, if a new runtime support will be added, we need a way to switch/specify
-	// runtime. i.e using ENV var
-	executionSpec, err := util.NewExecutionSpecFromInterface(util.ArgoWorkflow, obj)
-	if err != nil {
-		return nil, util.NewInternalServerError(err, "not Workflow struct")
-	}
-	setDefaultServiceAccount(executionSpec, apiJob.GetServiceAccount())
-	// Disable istio sidecar injection if not specified
-	executionSpec.SetAnnotationsToAllTemplatesIfKeyNotExist(util.AnnotationKeyIstioSidecarInject, util.AnnotationValueIstioSidecarInjectDisabled)
-	swfGeneratedName, err := toSWFCRDResourceGeneratedName(apiJob.Name)
-	if err != nil {
-		return nil, util.Wrap(err, "Create job failed")
-	}
-
-	scheduledWorkflow := &scheduledworkflow.ScheduledWorkflow{
-		ObjectMeta: metav1.ObjectMeta{GenerateName: swfGeneratedName},
-		Spec: scheduledworkflow.ScheduledWorkflowSpec{
-			Enabled:        apiJob.Enabled,
-			MaxConcurrency: &apiJob.MaxConcurrency,
-			Trigger:        *toCRDTrigger(apiJob.Trigger),
-			Workflow: &scheduledworkflow.WorkflowResource{
-				Parameters: toCRDParameter(apiJob.GetPipelineSpec().GetParameters()),
-				Spec:       executionSpec.ToStringForSchedule(),
-			},
-			NoCatchup: util.BoolPointer(apiJob.NoCatchup),
-		},
-	}
-	return scheduledWorkflow, nil
-}
-
 func (t *V2Spec) GetTemplateType() TemplateType {
 	return V2
 }
@@ -180,4 +130,54 @@ func (t *V2Spec) RunWorkflow(apiRun *api.Run, options RunWorkflowOptions) (util.
 	}
 	executionSpec.SetPodMetadataLabels(util.LabelKeyWorkflowRunId, options.RunId)
 	return executionSpec, nil
+}
+
+func (t *V2Spec) ScheduledWorkflow(apiJob *api.Job) (*scheduledworkflow.ScheduledWorkflow, error) {
+	bytes, err := protojson.Marshal(t.spec)
+	if err != nil {
+		return nil, util.Wrap(err, "Failed marshal pipeline spec to json")
+	}
+	spec := &structpb.Struct{}
+	if err := protojson.Unmarshal(bytes, spec); err != nil {
+		return nil, util.Wrap(err, "Failed to parse pipeline spec")
+	}
+	job := &pipelinespec.PipelineJob{PipelineSpec: spec}
+	jobRuntimeConfig, err := toPipelineJobRuntimeConfig(apiJob.GetPipelineSpec().GetRuntimeConfig())
+	if err != nil {
+		return nil, util.Wrap(err, "Failed to convert to PipelineJob RuntimeConfig")
+	}
+	job.RuntimeConfig = jobRuntimeConfig
+	obj, err := argocompiler.Compile(job, nil)
+	if err != nil {
+		return nil, util.Wrap(err, "Failed to compile job")
+	}
+	// currently, there is only Argo implementation, so it's using `ArgoWorkflow` for now
+	// later on, if a new runtime support will be added, we need a way to switch/specify
+	// runtime. i.e using ENV var
+	executionSpec, err := util.NewExecutionSpecFromInterface(util.ArgoWorkflow, obj)
+	if err != nil {
+		return nil, util.NewInternalServerError(err, "not Workflow struct")
+	}
+	setDefaultServiceAccount(executionSpec, apiJob.GetServiceAccount())
+	// Disable istio sidecar injection if not specified
+	executionSpec.SetAnnotationsToAllTemplatesIfKeyNotExist(util.AnnotationKeyIstioSidecarInject, util.AnnotationValueIstioSidecarInjectDisabled)
+	swfGeneratedName, err := toSWFCRDResourceGeneratedName(apiJob.Name)
+	if err != nil {
+		return nil, util.Wrap(err, "Create job failed")
+	}
+
+	scheduledWorkflow := &scheduledworkflow.ScheduledWorkflow{
+		ObjectMeta: metav1.ObjectMeta{GenerateName: swfGeneratedName},
+		Spec: scheduledworkflow.ScheduledWorkflowSpec{
+			Enabled:        apiJob.Enabled,
+			MaxConcurrency: &apiJob.MaxConcurrency,
+			Trigger:        *toCRDTrigger(apiJob.Trigger),
+			Workflow: &scheduledworkflow.WorkflowResource{
+				Parameters: toCRDParameter(apiJob.GetPipelineSpec().GetParameters()),
+				Spec:       executionSpec.ToStringForSchedule(),
+			},
+			NoCatchup: util.BoolPointer(apiJob.NoCatchup),
+		},
+	}
+	return scheduledWorkflow, nil
 }
