@@ -63,6 +63,7 @@ ${PROTOCCOMPILER} -I. -Ibackend/api/${API_VERSION} \
     --swagger_out=logtostderr=true:${TMP_OUTPUT} \
     backend/api/${API_VERSION}/*.proto
 # Move *.swagger.json files into swagger folder.
+mkdir -p ./backend/api/${API_VERSION}/swagger
 cp -a ${TMP_OUTPUT}/backend/api/${API_VERSION}/*.swagger.json ./backend/api/${API_VERSION}/swagger
 # Generate a single swagger json file from the swagger json files of all models.
 # Note: use backend/backend/api/${API_VERSION}/swagger/{run,job,experiment,pipeline,pipeline.upload,healthz}.swagger.json when apt-get can install jq-1.6
