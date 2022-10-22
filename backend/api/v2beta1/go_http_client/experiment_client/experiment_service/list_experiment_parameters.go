@@ -21,11 +21,8 @@ import (
 // NewListExperimentParams creates a new ListExperimentParams object
 // with the default values initialized.
 func NewListExperimentParams() *ListExperimentParams {
-	var (
-		resourceReferenceKeyTypeDefault = string("UNKNOWN_RESOURCE_TYPE")
-	)
+	var ()
 	return &ListExperimentParams{
-		ResourceReferenceKeyType: &resourceReferenceKeyTypeDefault,
 
 		timeout: cr.DefaultTimeout,
 	}
@@ -34,11 +31,8 @@ func NewListExperimentParams() *ListExperimentParams {
 // NewListExperimentParamsWithTimeout creates a new ListExperimentParams object
 // with the default values initialized, and the ability to set a timeout on a request
 func NewListExperimentParamsWithTimeout(timeout time.Duration) *ListExperimentParams {
-	var (
-		resourceReferenceKeyTypeDefault = string("UNKNOWN_RESOURCE_TYPE")
-	)
+	var ()
 	return &ListExperimentParams{
-		ResourceReferenceKeyType: &resourceReferenceKeyTypeDefault,
 
 		timeout: timeout,
 	}
@@ -47,11 +41,8 @@ func NewListExperimentParamsWithTimeout(timeout time.Duration) *ListExperimentPa
 // NewListExperimentParamsWithContext creates a new ListExperimentParams object
 // with the default values initialized, and the ability to set a context for a request
 func NewListExperimentParamsWithContext(ctx context.Context) *ListExperimentParams {
-	var (
-		resourceReferenceKeyTypeDefault = string("UNKNOWN_RESOURCE_TYPE")
-	)
+	var ()
 	return &ListExperimentParams{
-		ResourceReferenceKeyType: &resourceReferenceKeyTypeDefault,
 
 		Context: ctx,
 	}
@@ -60,12 +51,9 @@ func NewListExperimentParamsWithContext(ctx context.Context) *ListExperimentPara
 // NewListExperimentParamsWithHTTPClient creates a new ListExperimentParams object
 // with the default values initialized, and the ability to set a custom HTTPClient for a request
 func NewListExperimentParamsWithHTTPClient(client *http.Client) *ListExperimentParams {
-	var (
-		resourceReferenceKeyTypeDefault = string("UNKNOWN_RESOURCE_TYPE")
-	)
+	var ()
 	return &ListExperimentParams{
-		ResourceReferenceKeyType: &resourceReferenceKeyTypeDefault,
-		HTTPClient:               client,
+		HTTPClient: client,
 	}
 }
 
@@ -76,10 +64,15 @@ type ListExperimentParams struct {
 
 	/*Filter
 	  A url-encoded, JSON-serialized Filter protocol buffer (see
-	[filter.proto](https://github.com/kubeflow/pipelines/blob/master/backend/api/v1beta1/filter.proto)).
+	[filter.proto](https://github.com/kubeflow/pipelines/blob/master/backend/api/filter.proto)).
 
 	*/
 	Filter *string
+	/*Namespace
+	  Which namespace to filter the experiments on.
+
+	*/
+	Namespace *string
 	/*PageSize
 	  The number of experiments to be listed per page. If there are more
 	experiments than this number, the response message will contain a
@@ -94,16 +87,6 @@ type ListExperimentParams struct {
 
 	*/
 	PageToken *string
-	/*ResourceReferenceKeyID
-	  The ID of the resource that referred to.
-
-	*/
-	ResourceReferenceKeyID *string
-	/*ResourceReferenceKeyType
-	  The type of the resource that referred to.
-
-	*/
-	ResourceReferenceKeyType *string
 	/*SortBy
 	  Can be format of "field_name", "field_name asc" or "field_name desc"
 	Ascending by default.
@@ -160,6 +143,17 @@ func (o *ListExperimentParams) SetFilter(filter *string) {
 	o.Filter = filter
 }
 
+// WithNamespace adds the namespace to the list experiment params
+func (o *ListExperimentParams) WithNamespace(namespace *string) *ListExperimentParams {
+	o.SetNamespace(namespace)
+	return o
+}
+
+// SetNamespace adds the namespace to the list experiment params
+func (o *ListExperimentParams) SetNamespace(namespace *string) {
+	o.Namespace = namespace
+}
+
 // WithPageSize adds the pageSize to the list experiment params
 func (o *ListExperimentParams) WithPageSize(pageSize *int32) *ListExperimentParams {
 	o.SetPageSize(pageSize)
@@ -180,28 +174,6 @@ func (o *ListExperimentParams) WithPageToken(pageToken *string) *ListExperimentP
 // SetPageToken adds the pageToken to the list experiment params
 func (o *ListExperimentParams) SetPageToken(pageToken *string) {
 	o.PageToken = pageToken
-}
-
-// WithResourceReferenceKeyID adds the resourceReferenceKeyID to the list experiment params
-func (o *ListExperimentParams) WithResourceReferenceKeyID(resourceReferenceKeyID *string) *ListExperimentParams {
-	o.SetResourceReferenceKeyID(resourceReferenceKeyID)
-	return o
-}
-
-// SetResourceReferenceKeyID adds the resourceReferenceKeyId to the list experiment params
-func (o *ListExperimentParams) SetResourceReferenceKeyID(resourceReferenceKeyID *string) {
-	o.ResourceReferenceKeyID = resourceReferenceKeyID
-}
-
-// WithResourceReferenceKeyType adds the resourceReferenceKeyType to the list experiment params
-func (o *ListExperimentParams) WithResourceReferenceKeyType(resourceReferenceKeyType *string) *ListExperimentParams {
-	o.SetResourceReferenceKeyType(resourceReferenceKeyType)
-	return o
-}
-
-// SetResourceReferenceKeyType adds the resourceReferenceKeyType to the list experiment params
-func (o *ListExperimentParams) SetResourceReferenceKeyType(resourceReferenceKeyType *string) {
-	o.ResourceReferenceKeyType = resourceReferenceKeyType
 }
 
 // WithSortBy adds the sortBy to the list experiment params
@@ -239,6 +211,22 @@ func (o *ListExperimentParams) WriteToRequest(r runtime.ClientRequest, reg strfm
 
 	}
 
+	if o.Namespace != nil {
+
+		// query param namespace
+		var qrNamespace string
+		if o.Namespace != nil {
+			qrNamespace = *o.Namespace
+		}
+		qNamespace := qrNamespace
+		if qNamespace != "" {
+			if err := r.SetQueryParam("namespace", qNamespace); err != nil {
+				return err
+			}
+		}
+
+	}
+
 	if o.PageSize != nil {
 
 		// query param page_size
@@ -265,38 +253,6 @@ func (o *ListExperimentParams) WriteToRequest(r runtime.ClientRequest, reg strfm
 		qPageToken := qrPageToken
 		if qPageToken != "" {
 			if err := r.SetQueryParam("page_token", qPageToken); err != nil {
-				return err
-			}
-		}
-
-	}
-
-	if o.ResourceReferenceKeyID != nil {
-
-		// query param resource_reference_key.id
-		var qrResourceReferenceKeyID string
-		if o.ResourceReferenceKeyID != nil {
-			qrResourceReferenceKeyID = *o.ResourceReferenceKeyID
-		}
-		qResourceReferenceKeyID := qrResourceReferenceKeyID
-		if qResourceReferenceKeyID != "" {
-			if err := r.SetQueryParam("resource_reference_key.id", qResourceReferenceKeyID); err != nil {
-				return err
-			}
-		}
-
-	}
-
-	if o.ResourceReferenceKeyType != nil {
-
-		// query param resource_reference_key.type
-		var qrResourceReferenceKeyType string
-		if o.ResourceReferenceKeyType != nil {
-			qrResourceReferenceKeyType = *o.ResourceReferenceKeyType
-		}
-		qResourceReferenceKeyType := qrResourceReferenceKeyType
-		if qResourceReferenceKeyType != "" {
-			if err := r.SetQueryParam("resource_reference_key.type", qResourceReferenceKeyType); err != nil {
 				return err
 			}
 		}
