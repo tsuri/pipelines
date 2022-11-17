@@ -53,5 +53,9 @@ ModelEvaluationFeatureAttributionOp = load_component_from_file(
     os.path.join(
         os.path.dirname(__file__), 'feature_attribution/component.yaml'))
 
+EvaluatedAnnotationOp = load_component_from_file(
+    os.path.join(
+        os.path.dirname(__file__), 'evaluated_annotation/component.yaml'))
+
 GetVertexModelOp = load_component_from_file(
     os.path.join(os.path.dirname(__file__), 'get_vertex_model.yaml'))
