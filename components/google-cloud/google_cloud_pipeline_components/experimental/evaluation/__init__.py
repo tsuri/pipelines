@@ -22,9 +22,10 @@ except ImportError:
 
 __all__ = [
     'ModelEvaluationOp', 'ModelImportEvaluationOp', 'EvaluationDataSamplerOp',
-    'TargetFieldDataRemoverOp', 'ModelEvaluationClassificationOp',
-    'ModelEvaluationRegressionOp', 'ModelEvaluationForecastingOp',
-    'ModelEvaluationFeatureAttributionOp', 'GetVertexModelOp'
+    'EvaluationDatasetPreprocessorOp', 'TargetFieldDataRemoverOp',
+    'ModelEvaluationClassificationOp', 'ModelEvaluationRegressionOp',
+    'ModelEvaluationForecastingOp', 'ModelEvaluationFeatureAttributionOp',
+    'GetVertexModelOp'
 ]
 
 ModelEvaluationOp = load_component_from_file(
@@ -35,6 +36,10 @@ ModelImportEvaluationOp = load_component_from_file(
 
 EvaluationDataSamplerOp = load_component_from_file(
     os.path.join(os.path.dirname(__file__), 'data_sampler/component.yaml'))
+
+EvaluationDatasetPreprocessorOp = load_component_from_file(
+    os.path.join(
+        os.path.dirname(__file__), 'dataset_preprocessor/component.yaml'))
 
 TargetFieldDataRemoverOp = load_component_from_file(
     os.path.join(
